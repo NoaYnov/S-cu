@@ -264,6 +264,12 @@ COMMIT;
 
 
 
--- select all from account and user where uuid= 500 with a join
+-- select all from account and user where uuid= 500 with a join grouped by account.uuid
+SELECT account.uuid, account.password, user.mail
+FROM account
+JOIN user
+ON account.uuid = user.uuid
+WHERE account.uuid = 500
+GROUP BY account.uuid;
 
 
