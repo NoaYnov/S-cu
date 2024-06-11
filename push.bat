@@ -1,12 +1,15 @@
-@REM do a git add .
-@REM git commit -m "message", ask for message
-@REM git push
-
-
 @echo off
-set /p message="Enter commit message: "
-git add .
-git commit -m "%message%"
-git push
+set /p message="push : 1 / pull : 2 /remote : 3 "
+if %message% == 1 (
+    set /p message="Enter commit message: "
+    git add .
+    git commit -m "%message%"
+    git push
+) else if %message% == 2 (
+    git pull
+) else if %message% == 3 (
+    set /p url="Enter remote url: "
+    git remote add origin %url%
+)
 ```
 
