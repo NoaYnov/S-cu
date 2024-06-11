@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="20432daa-dcb7-4291-bd1d-7ad9a99916c2" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="PhpServers">
+    <servers>
+      <server host="localhost" id="648a5ccb-2c3b-4d65-b7e8-2cba23dc9ab1" name="LOCALHOST" />
+    </servers>
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP" />
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2WKxzqTZE9fyikRH0w7kuYVBAS9" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/valen/OneDrive/Documents/Cours (2023-2024)/PHP/TestProject",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "php.override.implement.member.chooser.php.doc": "NONE",
+    "settings.editor.selected.configurable": "settings.sync",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\valen\OneDrive\Documents\Cours (2023-2024)\PHP\TestProject" />
+      <recent name="C:\Users\valen\OneDrive\Documents\Cours (2023-2024)\PHP\TestProject\API\ReverseSort" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\valen\OneDrive\Documents\Cours (2023-2024)\PHP\TestProject" />
+      <recent name="C:\Users\valen\OneDrive\Documents\Cours (2023-2024)\PHP\TestProject\API" />
+    </key>
+  </component>
+  <component name="RunManager" selected="PHP Script.PHP SCRIPT">
+    <configuration name="PHP SCRIPT" type="PhpLocalRunConfigurationType" factoryName="PHP Console" path="$PROJECT_DIR$/index.php">
+      <CommandLine>
+        <PhpTestInterpreterSettings>
+          <option name="interpreterName" value="PHP 8.2.0" />
+        </PhpTestInterpreterSettings>
+      </CommandLine>
+      <method v="2" />
+    </configuration>
+    <configuration name="PHP Web" type="PhpWebAppRunConfigurationType" factoryName="PHP Web Application" server_name="LOCALHOST">
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="PHP Script.PHP SCRIPT" />
+      <item itemvalue="PHP Web Page.PHP Web" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="20432daa-dcb7-4291-bd1d-7ad9a99916c2" name="Changes" comment="" />
+      <created>1696495337689</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1696495337689</updated>
+      <workItem from="1696495338688" duration="3835000" />
+      <workItem from="1696499400955" duration="2577000" />
+      <workItem from="1696851382915" duration="10763000" />
+      <workItem from="1696864703108" duration="595000" />
+      <workItem from="1696865886287" duration="215000" />
+      <workItem from="1696872586892" duration="627000" />
+      <workItem from="1696873236748" duration="854000" />
+      <workItem from="1696935899068" duration="8449000" />
+      <workItem from="1697092352283" duration="90000" />
+      <workItem from="1697092463968" duration="11950000" />
+      <workItem from="1697201507806" duration="70000" />
+      <workItem from="1697201592303" duration="4499000" />
+      <workItem from="1697452551731" duration="601000" />
+      <workItem from="1697542684433" duration="394000" />
+      <workItem from="1697543125587" duration="6350000" />
+      <workItem from="1697697084668" duration="14564000" />
+      <workItem from="1697796201213" duration="651000" />
+      <workItem from="1698060150970" duration="4800000" />
+      <workItem from="1698072317627" duration="1301000" />
+      <workItem from="1698145557429" duration="10494000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
