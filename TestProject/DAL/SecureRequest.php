@@ -214,7 +214,7 @@ class SecureRequest
         try {
             $uuid = $this->UuidFinder($mail);
             //met en validité 10 minutes
-            $query = "INSERT INTO accountotp (uuid, otp, device, validity) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 1 MINUTE));";
+            $query = "INSERT INTO accountotp (uuid, otp, device, validity) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE));";
             $stmt = $this->connection->dbh->prepare($query);
             $token = bin2hex(random_int(100000, 999999));
             $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
@@ -229,6 +229,26 @@ class SecureRequest
             return $result;
         } catch (PDOException$e) {
             throw new PDOException("Error adding token: " . $e->getMessage());
+        }
+    }
+
+    function DeleteToken($mail,$device):bool
+    {
+        try {
+            $uuid = $this->UuidFinder($mail);
+            $query = "DELETE FROM accountotp WHERE uuid = ? AND device = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $device, PDO::PARAM_STR);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Token deleted!\n";
+            } else {
+                echo "Failed to delete token!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error deleting token: " . $e->getMessage());
         }
     }
 
@@ -268,6 +288,22 @@ class SecureRequest
 
     }
 
+    function AddAccountAttempts($mail,$validate,$device)
+    {
+        try {
+            $uuid = $this->UuidFinder($mail);
+            $query = "INSERT INTO accountattemps (uuid, a_time,validate,device) VALUES (?, NOW(),?,?);";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $validate, PDO::PARAM_BOOL);
+            $stmt->bindValue(3, $device, PDO::PARAM_STR);
+            $result = $stmt->execute();
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error adding account attempts: " . $e->getMessage());
+        }
+    }
+
 
 
     function Connection($password, $mail,$memorized,$device): bool
@@ -276,19 +312,21 @@ class SecureRequest
 
             if ($this->TestConnectionToken($mail,$device)) {
                 echo "Token found!\n";
-                //$this->DeleteToken($mail);
                 echo "VOUS ETES CONNECTE\n";
+                $this->AddAccountAttempts($mail,true,$device);
                 return true;
             }else {
                 $connect = $this->TestConnectionpwd($mail, $password);
                 if ($connect) {
                     echo "YOU ARE CONNECTED\n";
+                    $this->AddAccountAttempts($mail,true,$device);
                     if ($memorized) {
                         $this->CreateToken($mail,$device);
                     }
                     return true;
                 } else {
                     echo "Connection is not working!\n";
+                    $this->AddAccountAttempts($mail,false,$device);
                     return false;
                 }
             }
@@ -299,6 +337,24 @@ class SecureRequest
         }
 
     }
+
+    function Disconnect($mail,$password,$device):bool
+    {
+        try {
+            $connect = $this->TestConnectionpwd($mail, $password);
+            if ($connect) {
+                $this->DeleteToken($mail,$device);
+                echo "YOU ARE DISCONNECTED\n";
+                return true;
+            } else {
+                echo "Disconnection is not working!\n";
+                return false;
+            }
+        } catch (PDOException $e) {
+            throw new PDOException("Error disconnecting: " . $e->getMessage());
+        }
+    }
+
 
 
 
