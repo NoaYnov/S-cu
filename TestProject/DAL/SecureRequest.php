@@ -36,6 +36,7 @@ class SecureRequest
 
     function AddAccount(string $password, string $mail): bool
     {
+        $device = exec("hostname");
         if ($this->TestMail($mail)) {
             return false;
         }
@@ -47,6 +48,7 @@ class SecureRequest
             $this->AddAccount($password, $mail);
         }
         $password = hash('sha512', $password);
+
         try {
             $query = "INSERT INTO account (uuid, password) VALUES (?, ?);";
             $stmt = $this->connection->dbh->prepare($query);
@@ -54,6 +56,7 @@ class SecureRequest
             $stmt->bindValue(2, $password, PDO::PARAM_STR);
             $this->AddUser($uuid, $mail);
             $result = $stmt->execute();
+            $this->AddSignedIn($uuid,$device);
             if ($result) {
                 //$this->CreateToken($mail);
                 echo "Account added!\n";
@@ -66,6 +69,26 @@ class SecureRequest
         }
 
     }
+
+    function AddSignedIn($uuid,$device):bool
+    {
+        try {
+            $query = "INSERT INTO signedin (uuid,is_connected,device) VALUES (?,false,?);";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $device, PDO::PARAM_STR);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Signed in added!\n";
+            } else {
+                echo "Failed to add signed in!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error adding signed in: " . $e->getMessage());
+        }
+    }
+
 
 
     function TestConnectionpwd($mail, $password): bool
@@ -304,54 +327,144 @@ class SecureRequest
         }
     }
 
+    function ChangeConnexionState($mail,$device,$state):bool
+    {
+        try {
+            $uuid = $this->UuidFinder($mail);
+            $query = "UPDATE signedin SET is_connected = ? WHERE uuid = ? AND device = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $state, PDO::PARAM_BOOL);
+            $stmt->bindValue(2, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(3, $device, PDO::PARAM_STR);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Connection state changed!\n";
+            } else {
+                echo "Failed to change connection state!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error changing connection state: " . $e->getMessage());
+        }
+    }
+
+    function CheckConnexionState($mail,$device):bool
+    {
+        try {
+            $uuid = $this->UuidFinder($mail);
+            $query = "SELECT is_connected FROM signedin WHERE uuid = ? AND device = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $device, PDO::PARAM_STR);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return $result['is_connected'];
+            } else {
+                return false;
+            }
+        } catch (PDOException $e) {
+            throw new PDOException("Error checking connection state: " . $e->getMessage());
+        }
+    }
+
+
 
 
     function Connection($password, $mail,$memorized,$device): bool
     {
-        try {
+        if ($this->CheckConnexionState($mail,$device)) {
+            echo "You are already connected\n";
+            return false;
+        }
+        else {
+            try {
 
-            if ($this->TestConnectionToken($mail,$device)) {
-                echo "Token found!\n";
-                echo "VOUS ETES CONNECTE\n";
-                $this->AddAccountAttempts($mail,true,$device);
-                return true;
-            }else {
-                $connect = $this->TestConnectionpwd($mail, $password);
-                if ($connect) {
-                    echo "YOU ARE CONNECTED\n";
-                    $this->AddAccountAttempts($mail,true,$device);
-                    if ($memorized) {
-                        $this->CreateToken($mail,$device);
-                    }
+                if ($this->TestConnectionToken($mail, $device)) {
+                    echo "Token found!\n";
+                    echo "VOUS ETES CONNECTE\n";
+                    $this->AddAccountAttempts($mail, true, $device);
+                    $this->ChangeConnexionState($mail, $device, true);
                     return true;
                 } else {
-                    echo "Connection is not working!\n";
-                    $this->AddAccountAttempts($mail,false,$device);
-                    return false;
+                    $connect = $this->TestConnectionpwd($mail, $password);
+                    if ($connect) {
+                        echo "YOU ARE CONNECTED\n";
+                        $this->AddAccountAttempts($mail, true, $device);
+                        $this->ChangeConnexionState($mail, $device, true);
+                        if ($memorized) {
+                            $this->CreateToken($mail, $device);
+                        }
+                        return true;
+                    } else {
+                        echo "Connection is not working!\n";
+                        $this->AddAccountAttempts($mail, false, $device);
+                        return false;
+                    }
                 }
-            }
 
-        }
-        catch (PDOException $e) {
-            throw new PDOException("Error connecting: " . $e->getMessage());
+            } catch (PDOException $e) {
+                throw new PDOException("Error connecting: " . $e->getMessage());
+            }
         }
 
     }
 
-    function Disconnect($mail,$password,$device):bool
+    function Disconnect($mail,$device):bool
     {
-        try {
-            $connect = $this->TestConnectionpwd($mail, $password);
-            if ($connect) {
-                $this->DeleteToken($mail,$device);
-                echo "YOU ARE DISCONNECTED\n";
-                return true;
+        echo $this->CheckConnexionState($mail,$device);
+        if (!$this->CheckConnexionState($mail,$device)){
+            echo "You are already disconnected\n";
+            return false;
+        }
+        else {
+            try {
+                $connect = $this->CheckConnexionState($mail, $device);
+                if ($connect) {
+                    $this->DeleteToken($mail, $device);
+                    $this->ChangeConnexionState($mail, $device, false);
+                    echo "YOU ARE DISCONNECTED\n";
+                    return true;
+                } else {
+                    echo "You are already disconnected\n";
+                    return false;
+                }
+            } catch (PDOException $e) {
+                throw new PDOException("Error disconnecting: " . $e->getMessage());
+            }
+        }
+    }
+
+    function ChangePassword($mail,$password,$newPassword):bool
+    {
+        if ($this->TestConnectionpwd($mail,$password)) {
+            if ($this->TestPasswordFormat($newPassword)) {
+                $uuid = $this->UuidFinder($mail);
+                $newPassword = hash('sha512', $newPassword);
+                try {
+                    $password = hash('sha512', $password);
+                    $query = "UPDATE account SET password = ? WHERE uuid = ? AND password = ?";
+                    $stmt = $this->connection->dbh->prepare($query);
+                    $stmt->bindValue(1, $newPassword, PDO::PARAM_STR);
+                    $stmt->bindValue(2, $uuid, PDO::PARAM_INT);
+                    $stmt->bindValue(3, $password, PDO::PARAM_STR);
+                    $result = $stmt->execute();
+                    if ($result) {
+                        echo "Password changed!\n";
+                    } else {
+                        echo "Failed to change password!\n";
+                    }
+                    return $result;
+                } catch (PDOException $e) {
+                    throw new PDOException("Error changing password: " . $e->getMessage());
+                }
             } else {
-                echo "Disconnection is not working!\n";
+                echo "Password is not valid!\n";
                 return false;
             }
-        } catch (PDOException $e) {
-            throw new PDOException("Error disconnecting: " . $e->getMessage());
+        } else {
+            echo "Password is not valid!\n";
+            return false;
         }
     }
 
