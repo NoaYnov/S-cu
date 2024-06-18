@@ -12,9 +12,6 @@ class SignUp extends Service {
         echo "Signup service is working!\n";
         $credentials = Credentials::GetCredentials("db.json");
         $db = new SecureRequest($credentials);
-        //$db->AddAccount($uuid,$stretch,$password,$mail);
-        //$db->CreateToken($uuid);
-        //$db->TestConnectionpwd($uuid,$password);
         $db->AddAccount($password,$mail);
     }
 }

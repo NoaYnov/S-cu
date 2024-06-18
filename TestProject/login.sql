@@ -273,3 +273,17 @@ WHERE account.uuid = 500
 GROUP BY account.uuid;
 
 
+-- select otp with mail
+SELECT accountotp.otp
+FROM accountotp
+JOIN account
+ON accountotp.uuid = account.uuid
+JOIN user
+ON account.uuid = user.uuid
+WHERE user.mail = ?
+
+-- select uuid with mail
+SELECT user.uuid
+FROM user
+WHERE user.mail = ?;
+

@@ -39,7 +39,7 @@ class SecureRequest
         if ($this->TestMail($mail)) {
             return false;
         }
-        if ($this->TestPasswordFormat($password)) {
+        if ($this->TestPasswordFormat($password)==false) {
             return false;
         }
         $uuid = $this->GenerateRandomuuid();
@@ -55,8 +55,8 @@ class SecureRequest
             $this->AddUser($uuid, $mail);
             $result = $stmt->execute();
             if ($result) {
+                //$this->CreateToken($mail);
                 echo "Account added!\n";
-                $this->CreateToken($uuid);
             } else {
                 echo "Failed to add account!\n";
             }
@@ -68,20 +68,26 @@ class SecureRequest
     }
 
 
-    function TestConnectionpwd($uuid, $password): bool
+    function TestConnectionpwd($mail, $password): bool
     {
         try {
+            $uuid = $this->UuidFinder($mail);
             $query = "SELECT password FROM account WHERE uuid = ?";
             $stmt = $this->connection->dbh->prepare($query);
             $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
             $request = $stmt->execute();
             $compare = hash('sha512', $password);
             $result = $stmt->fetch();
-            if ($result['password'] == $compare) {
-                echo "Connection is working!\n";
-                return true;
+            if ($result){
+                if ($result['password'] == $compare) {
+                    echo "Connection is working!\n";
+                    return true;
+                } else {
+                    echo "Password Issue\n";
+                    return false;
+                }
             } else {
-                echo "Connection is not working!\n";
+                echo "Password Issue\n";
                 return false;
             }
         } catch (PDOException $e) {
@@ -89,19 +95,22 @@ class SecureRequest
         }
     }
 
-    function TestConnectionToken($uuid): bool
+    function TestConnectionToken($mail,$device): bool
     {
         try {
-            $query = "SELECT otp FROM accountotp WHERE uuid = ?";
+            $this->TokenDeleteExpired();
+            $uuid = $this->UuidFinder($mail);
+            $query = "SELECT otp FROM accountotp WHERE uuid = ? AND validity > NOW() AND device = ?";
             $stmt = $this->connection->dbh->prepare($query);
             $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $device, PDO::PARAM_STR);
             $request = $stmt->execute();
             $result = $stmt->fetch();
             if ($result) {
                 echo "Connection is working!\n";
                 return true;
             } else {
-                echo "Connection is not working!\n";
+                echo "Token error\n";
                 return false;
             }
 
@@ -166,10 +175,8 @@ class SecureRequest
             $request = $stmt->execute();
             $result = $stmt->fetch();
             if ($result) {
-                echo "Connection is working!\n";
                 return true;
             } else {
-                echo "Connection is not working!\n";
                 return false;
             }
 
@@ -198,20 +205,22 @@ class SecureRequest
         }
     }
 
-    function CreateToken($uuid): bool
+    function CreateToken($mail,$device): bool
     {
-        if ($this->TestConnectionToken($uuid)) {
+        if ($this->TestConnectionToken($mail,$device)) {
             echo "Token already exists!\n";
             return false;
         }
         try {
-            $query = "INSERT INTO accountotp (uuid, otp,validity) VALUES (?, ?,600);";
+            $uuid = $this->UuidFinder($mail);
+            //met en validité 10 minutes
+            $query = "INSERT INTO accountotp (uuid, otp, device, validity) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 1 MINUTE));";
             $stmt = $this->connection->dbh->prepare($query);
-            $token = bin2hex(random_bytes(32));
+            $token = bin2hex(random_int(100000, 999999));
             $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
             $stmt->bindValue(2, $token, PDO::PARAM_STR);
+            $stmt->bindValue(3, $device, PDO::PARAM_STR);
             $result = $stmt->execute();
-            //$this->DeleteToken($uuid);
             if ($result) {
                 echo "Token added!\n";
             } else {
@@ -223,37 +232,73 @@ class SecureRequest
         }
     }
 
-    //fonction who wait 600 secondes before delete the token
-    function DeleteToken($uuid): bool
+    function UuidFinder(string $mail):int
     {
         try {
-            // Attendre 600 secondes (10 minutes)
-            echo "Waiting 600 seconds before deleting token...\n";
-            sleep(10);
-            echo "Deleting token...\n";
-
-            $query = "DELETE FROM accountotp WHERE uuid = ?";
+            $query = "SELECT uuid FROM user WHERE mail = ?";
             $stmt = $this->connection->dbh->prepare($query);
-            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
-            $result = $stmt->execute();
-
+            $stmt->bindValue(1, $mail, PDO::PARAM_STR);
+            $stmt->execute();
+            $result = $stmt->fetch();
             if ($result) {
-                echo "Token deleted!\n";
+                return $result['uuid'];
             } else {
-                echo "Failed to delete token!\n";
+                return 0;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+    }
+
+
+    function TokenDeleteExpired():bool
+    {
+        try {
+            $query = "DELETE FROM accountotp WHERE validity < NOW()";
+            $stmt = $this->connection->dbh->prepare($query);
+            $result = $stmt->execute();
+            if ($result) {
+            } else {
             }
             return $result;
         } catch (PDOException $e) {
             throw new PDOException("Error deleting token: " . $e->getMessage());
         }
+
     }
 
-    /*function Connection($mail, $password): bool
+
+
+    function Connection($password, $mail,$memorized,$device): bool
     {
-        $query = "SELECT uuid FROM user WHERE mail = ?";
+        try {
 
+            if ($this->TestConnectionToken($mail,$device)) {
+                echo "Token found!\n";
+                //$this->DeleteToken($mail);
+                echo "VOUS ETES CONNECTE\n";
+                return true;
+            }else {
+                $connect = $this->TestConnectionpwd($mail, $password);
+                if ($connect) {
+                    echo "YOU ARE CONNECTED\n";
+                    if ($memorized) {
+                        $this->CreateToken($mail,$device);
+                    }
+                    return true;
+                } else {
+                    echo "Connection is not working!\n";
+                    return false;
+                }
+            }
 
-    }*/
+        }
+        catch (PDOException $e) {
+            throw new PDOException("Error connecting: " . $e->getMessage());
+        }
+
+    }
 
 
 
