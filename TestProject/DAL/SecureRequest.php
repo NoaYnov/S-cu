@@ -211,20 +211,26 @@ class SecureRequest
 
     function AddUser($uuid, $mail): bool
     {
-        try {
-            $query = "INSERT INTO user (uuid, mail) VALUES (?, ?);";
-            $stmt = $this->connection->dbh->prepare($query);
-            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
-            $stmt->bindValue(2, $mail, PDO::PARAM_STR);
-            $result = $stmt->execute();
-            if ($result) {
-                echo "Account added!\n";
-            } else {
-                echo "Failed to add account!\n";
+        if (!$this->UserExist($mail)) {
+
+            try {
+                $query = "INSERT INTO user (uuid, mail) VALUES (?, ?);";
+                $stmt = $this->connection->dbh->prepare($query);
+                $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+                $stmt->bindValue(2, $mail, PDO::PARAM_STR);
+                $result = $stmt->execute();
+                if ($result) {
+                    echo "Account added!\n";
+                } else {
+                    echo "Failed to add account!\n";
+                }
+                return $result;
+            } catch (PDOException $e) {
+                throw new PDOException("Error adding user: " . $e->getMessage());
             }
-            return $result;
-        } catch (PDOException $e) {
-            throw new PDOException("Error adding user: " . $e->getMessage());
+        } else {
+            echo "User Creation failed!\n";
+            return false;
         }
     }
 
@@ -275,9 +281,27 @@ class SecureRequest
         }
     }
 
-    function UuidFinder(string $mail):int
+    function UserExist($mail):bool
     {
         try {
+            $query = "SELECT mail FROM user WHERE mail = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $mail, PDO::PARAM_STR);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+    }
+    function UuidFinder(string $mail):int
+    {
+      try {
             $query = "SELECT uuid FROM user WHERE mail = ?";
             $stmt = $this->connection->dbh->prepare($query);
             $stmt->bindValue(1, $mail, PDO::PARAM_STR);
@@ -292,6 +316,7 @@ class SecureRequest
         } catch (PDOException $e) {
             throw new PDOException("Error testing connection: " . $e->getMessage());
         }
+
     }
 
 
@@ -373,8 +398,13 @@ class SecureRequest
 
     function Connection($password, $mail,$memorized,$device): bool
     {
+        if ($this->UserExist($mail) == false) {
+            echo "User does not exist!\n";
+            return false;
+        }
         if ($this->CheckConnexionState($mail,$device)) {
             echo "You are already connected\n";
+            $this->AddAccountAttempts($mail, true, $device);
             return false;
         }
         else {
@@ -468,12 +498,102 @@ class SecureRequest
         }
     }
 
+    function TheBigDestroyer($mail,$password):bool
+    {
+        $uuid = $this->UuidFinder($mail);
+        $device = exec("hostname");
+        if ($this->CheckConnexionState($mail,$device)) {
+            $this->Disconnect($mail,$device);
+            $this->DeleteToken($mail,$device);
+            $this->AttemptDestroyer($mail);
+            $this->SignedInDestroyer($mail);
+            $this->UserDestroyer($mail);
+            $this->AccountDestroyer($uuid,$password);
+            return true;
+        }else {
+            echo "You are not connected\n";
+            return false;
+        }
+    }
 
 
+    function AccountDestroyer($uuid,$password):bool
+    {
+        $password = hash('sha512', $password);
+        try {
+            $query = "DELETE FROM account WHERE uuid = ? AND password = ?;";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $password, PDO::PARAM_STR);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Account destroyed!\n";
+            } else {
+                echo "Failed to destroy account!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error destroying account: " . $e->getMessage());
+        }
+    }
 
+    function UserDestroyer($mail):bool
+    {
+        $uuid = $this->UuidFinder($mail);
+        try {
+            $query = "DELETE FROM user WHERE uuid = ?;";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "User destroyed!\n";
+            } else {
+                echo "Failed to destroy user!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error destroying user: " . $e->getMessage());
+        }
+    }
 
+    function AttemptDestroyer($mail):bool
+    {
+        $uuid = $this->UuidFinder($mail);
+        try {
+            $query = "DELETE  FROM accountattemps WHERE uuid = ?;";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Attempts destroyed!\n";
+            } else {
+                echo "Failed to destroy attempts!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error destroying attempts: " . $e->getMessage());
+        }
 
+    }
 
+    function SignedInDestroyer($mail):bool
+    {
+        $uuid = $this->UuidFinder($mail);
+        try {
+            $query = "DELETE  FROM signedin WHERE uuid = ?;";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Signed in destroyed!\n";
+            } else {
+                echo "Failed to destroy signed in!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error destroying signed in: " . $e->getMessage());
+        }
+    }
 
 
 }
