@@ -14,7 +14,7 @@ class DeleteAccount extends Service {
         echo "Delete service is working!\n";
         $credentials = Credentials::GetCredentials("db.json");
         $db = new SecureRequest($credentials);
-        $db->TheBigDestroyer($mail, $password);
+        $db->StarDestroyer($mail, $password);
 
     }
 

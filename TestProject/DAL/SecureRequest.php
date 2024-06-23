@@ -498,7 +498,7 @@ class SecureRequest
         }
     }
 
-    function TheBigDestroyer($mail,$password):bool
+    function StarDestroyer($mail,$password):bool
     {
         $uuid = $this->UuidFinder($mail);
         $device = exec("hostname");
