@@ -9,7 +9,7 @@ class SignUp extends Service {
         parent::VerifyEmptyArgs($finalObject->body,  "password","mail");
         $password = $finalObject->body->password;
         $mail = $finalObject->body->mail;
-        echo "Signup service is working!\n";
+        echo "Signup tmp service is working!\n";
         $credentials = Credentials::GetCredentials("db.json");
         $db = new SecureRequest($credentials);
         $db->AddAccount($password,$mail);

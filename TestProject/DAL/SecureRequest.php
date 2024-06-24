@@ -43,6 +43,10 @@ class SecureRequest
         if ($this->TestPasswordFormat($password)==false) {
             return false;
         }
+        if ($this->MailExistTmp($mail)) {
+            echo "Mail already exist!\n";
+            return false;
+        }
         $uuid = $this->GenerateRandomuuid();
         if ($this->TestuuidExist($uuid)) {
             $this->AddAccount($password, $mail);
@@ -50,13 +54,12 @@ class SecureRequest
         $password = hash('sha512', $password);
 
         try {
-            $query = "INSERT INTO account (uuid, password) VALUES (?, ?);";
+            $query = "INSERT INTO accounttmp (uuid, password,mail) VALUES (?, ?,?);";
             $stmt = $this->connection->dbh->prepare($query);
             $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
             $stmt->bindValue(2, $password, PDO::PARAM_STR);
-            $this->AddUser($uuid, $mail);
+            $stmt->bindValue(3, $mail, PDO::PARAM_STR);
             $result = $stmt->execute();
-            $this->AddSignedIn($uuid,$device);
             if ($result) {
                 //$this->CreateToken($mail);
                 echo "Account added!\n";
@@ -69,6 +72,140 @@ class SecureRequest
         }
 
     }
+
+    function MailExistTmp($mail):bool
+    {
+        try {
+            $query = "SELECT mail FROM accounttmp WHERE mail = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $mail, PDO::PARAM_STR);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+    }
+
+    function AccountExist($uuid):bool
+    {
+        try {
+            $query = "SELECT uuid FROM account WHERE uuid = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+    }
+    function AccountExistTmp($uuid):bool
+    {
+        try {
+            $query = "SELECT uuid FROM accounttmp WHERE uuid = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+    }
+
+    function GetUuidtmp($mail):int
+    {
+        try {
+            $query = "SELECT uuid FROM accounttmp WHERE mail = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $mail, PDO::PARAM_STR);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return $result['uuid'];
+            } else {
+                return 0;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+
+    }
+
+
+
+    function VerifyAccount($password, $mail): bool
+    {
+        $device = exec("hostname");
+        $uuid = $this->GetUuidtmp($mail);
+        $password = hash('sha512', $password);
+        if (!$uuid){
+            echo "Account does not exist!\n";
+            return false;
+        }
+        if($this->AccountExist($uuid)){
+            echo "Account already exist!\n";
+            return false;
+        }
+
+        try {
+            $query = "INSERT INTO account (uuid, password) VALUES (?, ?);";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $password, PDO::PARAM_STR);
+            $this->AddUser($uuid, $mail);
+            $result = $stmt->execute();
+            $this->DeletetmpAccount($mail);
+            $this->AddSignedIn($uuid,$device);
+            if ($result) {
+                echo "Account added!\n";
+            } else {
+                echo "Failed to add account!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error adding account: " . $e->getMessage());
+        }
+
+    }
+
+    function DeletetmpAccount($mail)
+    {
+        try {
+            $uuid = $this->UuidFinder($mail);
+            $query = "DELETE FROM accounttmp WHERE uuid = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Account deleted!\n";
+            } else {
+                echo "Failed to delete account!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error deleting account: " . $e->getMessage());
+        }
+
+    }
+
 
     function AddSignedIn($uuid,$device):bool
     {
@@ -121,6 +258,7 @@ class SecureRequest
     function TestConnectionToken($mail,$device): bool
     {
         try {
+
             $this->TokenDeleteExpired();
             $uuid = $this->UuidFinder($mail);
             $query = "SELECT otp FROM accountotp WHERE uuid = ? AND validity > NOW() AND device = ?";
@@ -242,7 +380,6 @@ class SecureRequest
         }
         try {
             $uuid = $this->UuidFinder($mail);
-            //met en validité 10 minutes
             $query = "INSERT INTO accountotp (uuid, otp, device, validity) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE));";
             $stmt = $this->connection->dbh->prepare($query);
             $token = bin2hex(random_int(100000, 999999));
@@ -320,6 +457,7 @@ class SecureRequest
     }
 
 
+
     function TokenDeleteExpired():bool
     {
         try {
@@ -340,7 +478,7 @@ class SecureRequest
     {
         try {
             $uuid = $this->UuidFinder($mail);
-            $query = "INSERT INTO accountattemps (uuid, a_time,validate,device) VALUES (?, NOW(),?,?);";
+            $query = "INSERT INTO accountattempts (uuid, a_time,validate,device) VALUES (?, NOW(),?,?);";
             $stmt = $this->connection->dbh->prepare($query);
             $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
             $stmt->bindValue(2, $validate, PDO::PARAM_BOOL);
@@ -442,7 +580,6 @@ class SecureRequest
 
     function Disconnect($mail,$device):bool
     {
-        echo $this->CheckConnexionState($mail,$device);
         if (!$this->CheckConnexionState($mail,$device)){
             echo "You are already disconnected\n";
             return false;
@@ -451,7 +588,6 @@ class SecureRequest
             try {
                 $connect = $this->CheckConnexionState($mail, $device);
                 if ($connect) {
-                    $this->DeleteToken($mail, $device);
                     $this->ChangeConnexionState($mail, $device, false);
                     echo "YOU ARE DISCONNECTED\n";
                     return true;
@@ -467,7 +603,8 @@ class SecureRequest
 
     function ChangePassword($mail,$password,$newPassword):bool
     {
-        if ($this->TestConnectionpwd($mail,$password)) {
+        $device = exec("hostname");
+        if ($this->CheckConnexionState($mail,$device)) {
             if ($this->TestPasswordFormat($newPassword)) {
                 $uuid = $this->UuidFinder($mail);
                 $newPassword = hash('sha512', $newPassword);
@@ -493,7 +630,7 @@ class SecureRequest
                 return false;
             }
         } else {
-            echo "Password is not valid!\n";
+            echo "You are not connected\n";
             return false;
         }
     }
@@ -560,7 +697,7 @@ class SecureRequest
     {
         $uuid = $this->UuidFinder($mail);
         try {
-            $query = "DELETE  FROM accountattemps WHERE uuid = ?;";
+            $query = "DELETE  FROM accountattempts WHERE uuid = ?;";
             $stmt = $this->connection->dbh->prepare($query);
             $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
             $result = $stmt->execute();
@@ -594,6 +731,167 @@ class SecureRequest
             throw new PDOException("Error destroying signed in: " . $e->getMessage());
         }
     }
+
+
+
+    function AddService($name,$link,$description):bool{
+        $uuid_service = $this->GenerateRandomuuid();
+        if (!$this->TestServiceExist($name,$uuid_service)) {
+            return false;
+        }
+        try {
+            $query = "INSERT INTO publicservice (name, link, description,uuid_service) VALUES (?, ?, ?, ?);";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $name, PDO::PARAM_STR);
+            $stmt->bindValue(2, $link, PDO::PARAM_STR);
+            $stmt->bindValue(3, $description, PDO::PARAM_STR);
+            $stmt->bindValue(4, $uuid_service, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Service added!\n";
+            } else {
+                echo "Failed to add service!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error adding service: " . $e->getMessage());
+        }
+    }
+
+    function TestuuidExistService($uuid_service): bool
+    {
+        try {
+            $query = "SELECT uuid_service FROM publicservice WHERE uuid_service = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid_service, PDO::PARAM_INT);
+            $request = $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+    }
+
+    function TestNameExistService($name): bool
+    {
+        try {
+            $query = "SELECT name FROM publicservice WHERE name = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $name, PDO::PARAM_STR);
+            $request = $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+    }
+
+    function TestServiceExist($name,$uuid_service): bool
+    {
+        if ($this->TestNameExistService($name)) {
+            echo "Service already exist!\n";
+            return false;
+        }else if ($this->TestuuidExistService($uuid_service)) {
+            $this->TestServiceExist($name,$uuid_service);
+        }
+        return true;
+    }
+
+
+    function LinkServiceToAccount($mail,$name):bool
+    {
+        $uuid = $this->UuidFinder($mail);
+        $uuid_service = $this->GetServiceuuid($name);
+
+        if ($this->LinkExist($mail,$name)) {
+            echo "Link already exist!\n";
+            return false;
+        }
+        if (!$this->TestuuidExist($uuid)) {
+            echo "Account does not exist!\n";
+            return false;
+        }
+        if (!$this->TestuuidExistService($uuid_service)) {
+            echo "Service does not exist!\n";
+            return false;
+        }
+        if ($this->TestuuidExistService($uuid_service)) {
+            try {
+                $query = "INSERT INTO accountservice (uuid, uuid_service) VALUES (?, ?);";
+                $stmt = $this->connection->dbh->prepare($query);
+                $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+                $stmt->bindValue(2, $uuid_service, PDO::PARAM_INT);
+                $result = $stmt->execute();
+                if ($result) {
+                    echo "Service linked!\n";
+                } else {
+                    echo "Failed to link service!\n";
+                }
+                return $result;
+            } catch (PDOException $e) {
+                throw new PDOException("Error linking service: " . $e->getMessage());
+            }
+        } else {
+            echo "Service does not exist!\n";
+            return false;
+        }
+    }
+
+    function GetServiceuuid($name):int
+    {
+        try {
+            $query = "SELECT uuid_service FROM publicservice WHERE name = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $name, PDO::PARAM_STR);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return $result['uuid_service'];
+            } else {
+                return 0;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+
+    }
+    function LinkExist($mail,$name):bool
+    {
+        $uuid = $this->UuidFinder($mail);
+        $uuid_service = $this->GetServiceuuid($name);
+        try {
+            $query = "SELECT uuid FROM accountservice WHERE uuid = ? AND uuid_service = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $uuid_service, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error testing connection: " . $e->getMessage());
+        }
+    }
+
+
+
+
+
 
 
 }
