@@ -1,0 +1,263 @@
+{
+	"info": {
+		"_postman_id": "05d6a5a7-9f7a-41db-b401-4004332653d3",
+		"name": "Request Secure Login",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30396858",
+		"_collection_link": "https://test77-1195.postman.co/workspace/test-Workspace~78f1cd79-0a55-4818-9f72-3811ba63185c/collection/30396858-05d6a5a7-9f7a-41db-b401-4004332653d3?action=share&source=collection_link&creator=30396858"
+	},
+	"item": [
+		{
+			"name": "localhost/API/SignUp/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"password\": \"VivaLaVida7\",\r\n    \"mail\" : \"noa.gambey@ynov.com\"\r\n\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/SignUp/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"SignUp",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost/API/VerifyAccount/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"password\": \"VivaLaVida7\",\r\n    \"mail\" : \"noa.gambey@ynov.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/VerifyAccount/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"VerifyAccount",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost/API/SignIn/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"password\": \"VivaLaVida7\",\r\n    \"mail\" : \"noa.gambey@ynov.com\",\r\n    \"memorized\":true\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/SignIn/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"SignIn",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost/API/SignOut/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"mail\" : \"noa.gambey@ynov.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/SignOut/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"SignOut",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost/API/SignedIn/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"mail\" : \"noa.gambey@ynov.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/SignedIn/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"SignedIn",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost/API/ChangePassword/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"mail\" : \"noa.gambey@ynov.com\",\r\n    \"password\": \"etttttt7\",\r\n    \"newPassword\":\"VivaLaVida7\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/ChangePassword/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"ChangePassword",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost/API/DeleteAccount/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"mail\" : \"noa.gambey@ynov.com\",\r\n    \"password\": \"VivaLaVida7\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/DeleteAccount/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"DeleteAccount",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost/API/AddService/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"Youtube\",\r\n    \"link\":\"https://www.youtube.com/\",\r\n    \"description\":\"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/AddService/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"AddService",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost/API/LinkServiceToAccount/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"service\":\"Youtube\",\r\n    \"mail\":\"noa.gambey@ynov.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost/API/LinkServiceToAccount/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"API",
+						"LinkServiceToAccount",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : mar. 11 juin 2024 à 15:13
+-- Généré le : mer. 26 juin 2024 à 20:14
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -30,27 +30,21 @@ SET time_zone = "+00:00";
 CREATE TABLE `account` (
   `id` int(11) NOT NULL,
   `uuid` int(11) NOT NULL,
-  `stretch` int(11) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `account`
---
-
-INSERT INTO `account` (`id`, `uuid`, `stretch`, `password`) VALUES
-(1, 5, 100, 'uhsfivsuigf');
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `accountattemps`
+-- Structure de la table `accountattempts`
 --
 
-CREATE TABLE `accountattemps` (
+CREATE TABLE `accountattempts` (
   `id` int(11) NOT NULL,
-  `uuid` int(11) DEFAULT NULL,
-  `a_time` datetime DEFAULT NULL
+  `a_time` datetime DEFAULT NULL,
+  `validate` tinyint(1) DEFAULT NULL,
+  `device` varchar(255) DEFAULT NULL,
+  `uuid` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -63,7 +57,8 @@ CREATE TABLE `accountotp` (
   `id` int(11) NOT NULL,
   `uuid` int(11) NOT NULL,
   `otp` int(11) NOT NULL,
-  `validity` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `validity` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `device` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -75,7 +70,7 @@ CREATE TABLE `accountotp` (
 CREATE TABLE `accountservice` (
   `id` int(11) NOT NULL,
   `uuid` int(11) NOT NULL,
-  `service_id` int(11) NOT NULL
+  `uuid_service` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -87,8 +82,8 @@ CREATE TABLE `accountservice` (
 CREATE TABLE `accounttmp` (
   `id` int(11) NOT NULL,
   `uuid` int(11) NOT NULL,
-  `stretch` varchar(255) DEFAULT NULL,
-  `password` varchar(255) DEFAULT NULL
+  `password` varchar(255) DEFAULT NULL,
+  `mail` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -99,7 +94,23 @@ CREATE TABLE `accounttmp` (
 
 CREATE TABLE `publicservice` (
   `id` int(11) NOT NULL,
-  `name` varchar(255) DEFAULT NULL
+  `name` varchar(255) DEFAULT NULL,
+  `link` varchar(255) DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `uuid_service` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `signedin`
+--
+
+CREATE TABLE `signedin` (
+  `id` int(11) NOT NULL,
+  `uuid` int(11) NOT NULL,
+  `is_connected` tinyint(1) DEFAULT 0,
+  `device` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -115,13 +126,6 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Déchargement des données de la table `user`
---
-
-INSERT INTO `user` (`id`, `mail`, `uuid`) VALUES
-(1, '', NULL);
-
---
 -- Index pour les tables déchargées
 --
 
@@ -133,11 +137,10 @@ ALTER TABLE `account`
   ADD UNIQUE KEY `uuid` (`uuid`);
 
 --
--- Index pour la table `accountattemps`
+-- Index pour la table `accountattempts`
 --
-ALTER TABLE `accountattemps`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uuid` (`uuid`);
+ALTER TABLE `accountattempts`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Index pour la table `accountotp`
@@ -167,6 +170,12 @@ ALTER TABLE `publicservice`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Index pour la table `signedin`
+--
+ALTER TABLE `signedin`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Index pour la table `user`
 --
 ALTER TABLE `user`
@@ -180,110 +189,51 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT pour la table `account`
 --
 ALTER TABLE `account`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
--- AUTO_INCREMENT pour la table `accountattemps`
+-- AUTO_INCREMENT pour la table `accountattempts`
 --
-ALTER TABLE `accountattemps`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `accountattempts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT pour la table `accountotp`
 --
 ALTER TABLE `accountotp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT pour la table `accountservice`
 --
 ALTER TABLE `accountservice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT pour la table `accounttmp`
 --
 ALTER TABLE `accounttmp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT pour la table `publicservice`
 --
 ALTER TABLE `publicservice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT pour la table `signedin`
+--
+ALTER TABLE `signedin`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT pour la table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- Contraintes pour les tables déchargées
---
-
---
--- Contraintes pour la table `accountattemps`
---
-ALTER TABLE `accountattemps`
-  ADD CONSTRAINT `accountattemps_ibfk_1` FOREIGN KEY (`uuid`) REFERENCES `account` (`uuid`),
-  ADD CONSTRAINT `fk_uuid` FOREIGN KEY (`uuid`) REFERENCES `account` (`uuid`) ON DELETE CASCADE;
-
---
--- Contraintes pour la table `accountotp`
---
-ALTER TABLE `accountotp`
-  ADD CONSTRAINT `accountotp_ibfk_1` FOREIGN KEY (`uuid`) REFERENCES `account` (`uuid`) ON DELETE CASCADE;
-
---
--- Contraintes pour la table `accountservice`
---
-ALTER TABLE `accountservice`
-  ADD CONSTRAINT `accountservice_ibfk_1` FOREIGN KEY (`uuid`) REFERENCES `account` (`uuid`) ON DELETE CASCADE;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- select all from account and user where uuid= 500 with a join grouped by account.uuid
-SELECT account.uuid, account.password, user.mail
-FROM account
-JOIN user
-ON account.uuid = user.uuid
-WHERE account.uuid = 500
-GROUP BY account.uuid;
-
-
--- select otp with mail
-SELECT accountotp.otp
-FROM accountotp
-JOIN account
-ON accountotp.uuid = account.uuid
-JOIN user
-ON account.uuid = user.uuid
-WHERE user.mail = ?
-
--- select uuid with mail
-SELECT user.uuid
-FROM user
-WHERE user.mail = ?;
-

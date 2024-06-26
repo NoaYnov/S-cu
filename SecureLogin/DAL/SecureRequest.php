@@ -19,14 +19,6 @@ class SecureRequest
         }
     }
 
-    function AllSelect(): array
-    {
-        $query = "SELECT * FROM account";
-        $stmt = $this->connection->dbh->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll();
-    }
-
     function GenerateRandomuuid(): int
     {
         $uuid = random_int(100000000, 999999999);
@@ -96,24 +88,6 @@ class SecureRequest
     {
         try {
             $query = "SELECT uuid FROM account WHERE uuid = ?";
-            $stmt = $this->connection->dbh->prepare($query);
-            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
-            $stmt->execute();
-            $result = $stmt->fetch();
-            if ($result) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } catch (PDOException $e) {
-            throw new PDOException("Error testing connection: " . $e->getMessage());
-        }
-    }
-    function AccountExistTmp($uuid):bool
-    {
-        try {
-            $query = "SELECT uuid FROM accounttmp WHERE uuid = ?";
             $stmt = $this->connection->dbh->prepare($query);
             $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
             $stmt->execute();
@@ -640,6 +614,7 @@ class SecureRequest
         $uuid = $this->UuidFinder($mail);
         $device = exec("hostname");
         if ($this->CheckConnexionState($mail,$device)) {
+            $this->LinkDestroyer($uuid);
             $this->Disconnect($mail,$device);
             $this->DeleteToken($mail,$device);
             $this->AttemptDestroyer($mail);
@@ -729,6 +704,24 @@ class SecureRequest
             return $result;
         } catch (PDOException $e) {
             throw new PDOException("Error destroying signed in: " . $e->getMessage());
+        }
+    }
+
+    function LinkDestroyer($uuid):bool
+    {
+        try {
+            $query = "DELETE  FROM accountservice WHERE uuid = ?;";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Link destroyed!\n";
+            } else {
+                echo "Failed to destroy link!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error destroying link: " . $e->getMessage());
         }
     }
 
@@ -866,6 +859,8 @@ class SecureRequest
         }
 
     }
+
+
     function LinkExist($mail,$name):bool
     {
         $uuid = $this->UuidFinder($mail);
