@@ -44,6 +44,7 @@ Cela vous donnera accès à toutes les requêtes nécessaires pour tester l'API 
 - Si le compte n'existe pas, on renvoie une erreur
 - Si le compte est déjà connecté, on renvoie une erreur
 - Si le compte n'est pas vérifié, on renvoie une erreur
+- Si il a 5 tentatives de connexion echoué en moins de 1 minutes, on bloque les tentatives de connexion
 ### Créer un token :
 - Créer un token pour un compte
 - Si le compte n'existe pas, on renvoie une erreur
@@ -75,6 +76,19 @@ Cela vous donnera accès à toutes les requêtes nécessaires pour tester l'API 
 - Ajoute un service(Exemple: Google, Facebook, etc)
 ### Ajouter un service à un compte:
 - Ajoute un service à un compte
+- Si le service n'existe pas, on renvoie une erreur
+- Si le compte n'existe pas, on renvoie une erreur
+- Si le lien existe déjà, on renvoie une erreur
+### Supprimer un service d'un compte:
+- Supprime un service d'un compte
+- Si le service n'existe pas, on renvoie une erreur
+- Si le compte n'existe pas, on renvoie une erreur
+### Afficher les service d'un compte:
+- Affiche les services d'un compte
+### Supprimer un service:
+- Supprime un service
+- Si le service n'existe pas, on renvoie une erreur
+- Si le compte n'existe pas, on renvoie une erreur
 ### Supprimer un Compte:
 - Supprime un compte
 - Supprime le user

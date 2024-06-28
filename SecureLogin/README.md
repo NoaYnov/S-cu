@@ -33,3 +33,17 @@
 - Importer le fichier `Request Secure Login.postman_collection.json`
   Cela vous donnera accès à toutes les requêtes nécessaires pour tester l'API =)
 
+### Listes des Requêtes
+1. Création du compte temporaire :```localhost/API/SignUp/```
+2. Vérification du compte :```localhost/API/VerifyAccount/```
+3. Connexion à un compte :```localhost/API/SignIn/```
+4. Déconnexion d'un compte :```localhost/API/SignOut/```
+5. Vérification de la connexion :```localhost/API/SignedIn/```
+6. Changement de mot de passe :```localhost/API/ChangePassword/```
+7. Suppression du compte :```localhost/API/DeleteAccount/```
+8. Ajout d'un service :```localhost/API/AddService/```
+9. Affichage des services :```localhost/API/DisplayService/```
+10. Suppression d'un service :```localhost/API/DeleteService/```
+11. Lier un service à un compte :```localhost/API/LinkServiceToAccount/```
+12. Délier un service à un compte :```localhost/API/UnlinkServiceToAccount/```
+

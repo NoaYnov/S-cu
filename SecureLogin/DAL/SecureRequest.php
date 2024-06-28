@@ -506,10 +506,38 @@ class SecureRequest
     }
 
 
-
+    function AntiBruteForce($mail,$device):bool
+    {
+        try {
+            $uuid = $this->UuidFinder($mail);
+            $query = "SELECT COUNT(*) FROM accountattempts WHERE uuid = ? AND a_time > DATE_SUB(NOW(), INTERVAL 1 MINUTE) AND validate = false AND device = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $device, PDO::PARAM_STR);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            if ($result) {
+                if ($result['COUNT(*)'] > 5) {
+                    echo "Too many attempts!\n";
+                    return true;
+                } else {
+                    echo "Attempts: " . $result['COUNT(*)'] . "\n";
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } catch (PDOException $e) {
+            throw new PDOException("Error checking connection state: " . $e->getMessage());
+        }
+    }
 
     function Connection($password, $mail,$memorized,$device): bool
     {
+        if ($this->AntiBruteForce($mail,$device)) {
+            echo "Too many attempts!\n";
+            return false;
+        }
         if ($this->UserExist($mail) == false) {
             echo "User does not exist!\n";
             return false;
@@ -727,6 +755,8 @@ class SecureRequest
 
 
 
+
+
     function AddService($name,$link,$description):bool{
         $uuid_service = $this->GenerateRandomuuid();
         if (!$this->TestServiceExist($name,$uuid_service)) {
@@ -750,6 +780,91 @@ class SecureRequest
             throw new PDOException("Error adding service: " . $e->getMessage());
         }
     }
+
+    function DeleteService($name):bool
+    {
+        $uuid_service = $this->GetServiceuuid($name);
+        try {
+            $query = "DELETE FROM publicservice WHERE uuid_service = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid_service, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Service deleted!\n";
+                $this->DeleteAllServiceLink($uuid_service);
+            } else {
+                echo "Failed to delete service!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error deleting service: " . $e->getMessage());
+        }
+    }
+
+    function DeleteServiceLink($mail,$name):bool
+    {
+        $uuid = $this->UuidFinder($mail);
+        $uuid_service = $this->GetServiceuuid($name);
+        try {
+            $query = "DELETE FROM accountservice WHERE uuid = ? AND uuid_service = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->bindValue(2, $uuid_service, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Service link deleted!\n";
+            } else {
+                echo "Failed to delete service link!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error deleting service link: " . $e->getMessage());
+        }
+    }
+    function DeleteAllServiceLink($uuid_service):bool
+    {
+        try {
+            $query = "DELETE FROM accountservice WHERE uuid_service = ?";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid_service, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) {
+                echo "Service link deleted!\n";
+            } else {
+                echo "Failed to delete service link!\n";
+            }
+            return $result;
+        } catch (PDOException $e) {
+            throw new PDOException("Error deleting service link: " . $e->getMessage());
+        }
+    }
+
+    function DisplayServiceMail($mail):bool
+    {
+        $uuid = $this->UuidFinder($mail);
+        try {
+            $query = "SELECT name, link, description FROM publicservice WHERE uuid_service IN (SELECT uuid_service FROM accountservice WHERE uuid = ?)";
+            $stmt = $this->connection->dbh->prepare($query);
+            $stmt->bindValue(1, $uuid, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetchAll();
+            if ($result) {
+                foreach ($result as $row) {
+                    echo "Name: " . $row['name'] . "\n";
+                    echo "Link: " . $row['link'] . "\n";
+                    echo "Description: " . $row['description'] . "\n";
+                }
+                return true;
+            } else {
+                echo "No service found!\n";
+                return false;
+            }
+        } catch (PDOException $e) {
+            throw new PDOException("Error displaying service: " . $e->getMessage());
+        }
+    }
+
+
 
     function TestuuidExistService($uuid_service): bool
     {
